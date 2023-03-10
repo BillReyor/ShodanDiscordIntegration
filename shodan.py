@@ -31,13 +31,15 @@ while True:
             host = random.choice(hosts)
             # Get the IP address of the host
             ip_address = host["ip_str"]
+            # Get the port of the host
+            port = host["port"]
             # Get the country and city of the host
             country_name = host.get("location", {}).get("country_name", "Unknown country")
             city_name = host.get("location", {}).get("city", "Unknown city")
             # Get the image URL from the host
             image_url = "https://www.shodan.io/host/{}/image".format(ip_address)
             # Format the message for Discord
-            message = "Here's a Shodan image of {} in {}, {}: {}".format(ip_address, city_name, country_name, image_url)
+            message = "Here's a Shodan image of {}:{} in {}, {}: {}".format(ip_address, port, city_name, country_name, image_url)
             print("Sending message to Discord: {}".format(message))
             # Send the message to the Discord webhook
             response = requests.post(DISCORD_WEBHOOK_URL, json={"content": message})
