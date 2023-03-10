@@ -1,6 +1,7 @@
 import requests
 import random
 import time
+import json
 
 # Shodan API key
 SHODAN_API_KEY = ""
@@ -22,8 +23,9 @@ while True:
     response = requests.get(shodan_api_url)
     if response.status_code == 200:
         # Parse the response JSON to get the list of hosts
-        response_json = response.json()
-        hosts = response_json["matches"]
+        response_content = response.content.decode("utf-8")
+        response_json = json.loads(response_content)
+        hosts = response_json.get("matches")
         if hosts:
             # Pick a random host from the list of hosts
             host = random.choice(hosts)
