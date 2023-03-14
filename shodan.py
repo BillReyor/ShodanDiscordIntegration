@@ -4,7 +4,7 @@ import time
 import json
 
 # enable diagnostics
-DIAG=False
+DIAG=True
 
 # Shodan API key
 SHODAN_API_KEY = ""
@@ -12,12 +12,11 @@ SHODAN_API_KEY = ""
 # Discord webhook URL
 DISCORD_WEBHOOK_URL = ""
 
+
 # Set up the Shodan API with a query parameter
-query = "has_screenshot:true country:\"RU\""
+query = "has_screenshot:true ssl:edu"
 shodan_api_url = "https://api.shodan.io/shodan/host/search?key={}&query={}".format(SHODAN_API_KEY, query)
 
-# Set up a counter to keep track of the number of results returned
-result_count = 0
 def init_query(shodan_api_url, query):
     print("Searching for hosts with keyword '{}'...".format(query))
     # Send a search request to the Shodan API
@@ -74,6 +73,7 @@ def parse_content(response_data):
 def discord_sender(message):
         print("Sending message to Discord: {}".format(message))
         # Send the message to the Discord webhook
+        result_count = 0
         try:
             response = requests.post(DISCORD_WEBHOOK_URL, json={"content": message}, timeout=1000)
             if response.status_code == 204: # continue if 204 on POST
@@ -81,6 +81,7 @@ def discord_sender(message):
                 result_count += 1
                 print("Message sent successfully. Total results returned: {}".format(result_count))
                 # Wait for an hour before searching for the next image
+                print("sleeping 8 hours")
                 time.sleep(60 * 60 * 8) # Sleep for 8 hours
                 init_query(shodan_api_url, query) # start from initial query
             else:
