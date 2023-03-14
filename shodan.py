@@ -16,16 +16,31 @@ class ShodanQuery:
     def __init__(self, api_key, query):
         self.api = shodan.Shodan(api_key)
         self.query = query
-        self.sent_ips = set()
+        self.sent_ips = self.load_sent_ips()
+
+    def load_sent_ips(self):
+        try:
+            with open("sentips.txt", "r") as f:
+                return set(line.strip() for line in f.readlines())
+        except FileNotFoundError:
+            return set()
+
+    def save_sent_ip(self, ip_address):
+        with open("sentips.txt", "a") as f:
+            f.write(ip_address + "\n")
+        self.sent_ips.add(ip_address)
 
     def execute_with_retry(self, func, *args, **kwargs):
         while True:
             try:
                 return func(*args, **kwargs)
             except Exception as e:
-                logger.error(e)
+                logger.error(f"Exception occurred: {e}")
+                logger.error(f"Function: {func.__name__}")
+                logger.error(f"Arguments: {args}")
+                logger.error(f"Keyword arguments: {kwargs}")
                 time.sleep(60)
-
+                
     def init_query(self):
         print("Searching for hosts with keyword '{}'...".format(self.query))
         response_data = self.execute_with_retry(self.api.search, self.query)
@@ -40,8 +55,8 @@ class ShodanQuery:
                 ip_address = host["ip_str"]
                 if ip_address not in self.sent_ips:
                     break
-            
-            self.sent_ips.add(ip_address)
+
+            self.save_sent_ip(ip_address)
             port = host["port"]
             country_name = host.get("location", {}).get("country_name", "Unknown country")
             city_name = host.get("location", {}).get("city", "Unknown city")
@@ -55,7 +70,7 @@ class DiscordWebhookSender:
     @staticmethod
     def send_message(message):
         print("Sending message to Discord: {}".format(message))
-        response = ShodanQuery.execute_with_retry(requests.post, DISCORD_WEBHOOK_URL, json={"content": message}, timeout=1000)
+        response = shodan_query.execute_with_retry(requests.post, DISCORD_WEBHOOK_URL, json={"content": message}, timeout=1000)
 
         if response.status_code == 204:
             print("Message sent successfully.")
