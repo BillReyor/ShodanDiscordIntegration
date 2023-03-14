@@ -19,12 +19,11 @@ result_count = 0
 # Loop until we have returned two results
 while True:
     print("Searching for hosts with keyword '{}'...".format(query))
-    # Send a search request to the Shodan API
-    response = requests.get(shodan_api_url)
+    # Send a search request to the Shodan API, added timeout
+    response = requests.get(shodan_api_url, timeout=1000)
     if response.status_code == 200:
         # Parse the response JSON to get the list of hosts
-        response_content = response.content.decode("utf-8")
-        response_json = json.loads(response_content)
+        response_json = json.loads(response.content)
         hosts = response_json.get("matches")
         if hosts:
             # Pick a random host from the list of hosts
@@ -41,14 +40,14 @@ while True:
             # Format the message for Discord
             message = "Here's a Shodan image of {}:{} in {}, {}: {}".format(ip_address, port, city_name, country_name, image_url)
             print("Sending message to Discord: {}".format(message))
-            # Send the message to the Discord webhook
-            response = requests.post(DISCORD_WEBHOOK_URL, json={"content": message})
+            # Send the message to the Discord webhook, added timeout
+            response = requests.post(DISCORD_WEBHOOK_URL, json={"content": message}, timeout=1000)
             if response.status_code == 204:
                 # Increment the result count if the message was sent successfully
                 result_count += 1
                 print("Message sent successfully. Total results returned: {}".format(result_count))
                 # Wait for an hour before searching for the next image
-                time.sleep(60*60)
+                time.sleep(60 * 60 * 8)# created an 8 hour wait - under 100 credits monthly
         else:
             # Wait for a few seconds if no hosts were found
             print("No hosts found with keyword '{}'. Waiting...".format(query))
