@@ -13,7 +13,7 @@ Prerequisites
 Installation
 ------------
 
-1.  Clone this repository or download the `shodan.py` file.
+1.  Clone this repository or download the 'shodan.py' file.
 2.  Install the `requests` module by running `pip install requests`.
 
 Configuration
