@@ -31,6 +31,7 @@ class ShodanQuery:
         self.sent_ips.add(ip_address)
 
     def execute_with_retry(self, func, *args, **kwargs):
+        retries = 0
         while True:
             try:
                 return func(*args, **kwargs)
@@ -40,6 +41,8 @@ class ShodanQuery:
                 logger.error(f"Arguments: {args}")
                 logger.error(f"Keyword arguments: {kwargs}")
                 time.sleep(60)
+                retries += 1
+                time.sleep(min(60 * retries, 3600))
                 
     def init_query(self):
         print("Searching for hosts with keyword '{}'...".format(self.query))
