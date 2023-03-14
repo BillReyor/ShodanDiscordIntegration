@@ -16,6 +16,7 @@ class ShodanQuery:
     def __init__(self, api_key, query):
         self.api = shodan.Shodan(api_key)
         self.query = query
+        self.sent_ips = set()
 
     def execute_with_retry(self, func, *args, **kwargs):
         while True:
@@ -34,8 +35,13 @@ class ShodanQuery:
         hosts = response_data.get("matches")
 
         if hosts:
-            host = random.choice(hosts)
-            ip_address = host["ip_str"]
+            while True:
+                host = random.choice(hosts)
+                ip_address = host["ip_str"]
+                if ip_address not in self.sent_ips:
+                    break
+            
+            self.sent_ips.add(ip_address)
             port = host["port"]
             country_name = host.get("location", {}).get("country_name", "Unknown country")
             city_name = host.get("location", {}).get("city", "Unknown city")
@@ -45,7 +51,6 @@ class ShodanQuery:
         else:
             self.init_query()
 
-
 class DiscordWebhookSender:
     @staticmethod
     def send_message(message):
@@ -54,6 +59,8 @@ class DiscordWebhookSender:
 
         if response.status_code == 204:
             print("Message sent successfully.")
+            current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
+            print("Timestamp: {}".format(current_time))
             print("Sleeping 8 hours")
             time.sleep(60 * 60 * 8)
             shodan_query.init_query()
