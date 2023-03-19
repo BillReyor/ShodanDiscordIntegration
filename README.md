@@ -13,7 +13,7 @@ Prerequisites
 Installation
 ------------
 
-1.  Clone this repository or download the `discodan.py` file.
+1.  Clone this repository or download the `DiscoDan.py` file.
 2.  Install the `requests` module by running `pip install requests`.
 3.  Install the `nested-lookup` module by running `pip install nested-lookup`.
 
@@ -29,6 +29,10 @@ Configuration
 Usage
 -----
 
-1.  Run the script by running `shodan.py` in a terminal.
-2.  The bot will search for a host with a screenshot in the country specified by the `query` parameter.
-3.  The bot will send a random screenshot to the Discord webhook once per hour, along with the host's IP address, city, and country.
+1.  Run the script by running `python3 Discodan.py` in a terminal.
+2.  The bot will search for a host with a screenshot in the country specified by the `QUERY` parameter.
+3.  The bot will send a random msg containing a link to the Discord webhook (adjust the timing) per hour
+4.  The msgs will contain: host's IP address, city, and country and a link to the Shodan hosted image(s).
+5.  App will ensure that no duplicate request are sent to the channle
+6.  App will proceed to exhaust the contents gathered from the quesy until finished
+7.  Next steps ?
