@@ -16,7 +16,7 @@ DISCORD_WEBHOOK_URL = ""
 QUERY = "has_screenshot:true ssl:edu"
 
 # Display verbose content from application
-VERBOSE = True
+VERBOSE = False #True
 
 # Enable logging of error level events
 logging.basicConfig(level=logging.ERROR, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -198,7 +198,7 @@ class DiscordWebhookSender:
 
 
 if __name__ == "__main__":
-    shodan_query = ShodanQuery(SHODAN_API_KEY, query, verbose)
+    shodan_query = ShodanQuery(SHODAN_API_KEY, QUERY, VERBOSE)
     while True:
         shodan_query.init_query()
 
