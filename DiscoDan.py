@@ -30,6 +30,7 @@ class ShodanQuery:
         self.sent_ips = self.load_sent_ips()
         self.history = self.load_history()
         self.today = current_time = time.strftime("%Y-%m-%d", time.gmtime())
+        self.classname = "ShodanQuery"
         if self.verbose: print("\n[ShodanQuery][INIT] -- ")
         if self.verbose: print("\t[INIT] Shodan API Key: {}".format(api_key))
         if self.verbose: print("\t[INIT] Shodan query: {}".format(query))
@@ -39,14 +40,14 @@ class ShodanQuery:
 
     def check_date(self):
         if self.verbose: fun="check_date"
-        if self.verbose: print("\n[ShodanQuery][{}] -- ".format(fun))
+        if self.verbose: print("\n[{}][{}] -- ".format(self.classname,fun))
         if self.today in nested_lookup('date', self.history):
             if self.verbose: print("\t[{}] Latest daily run being used: {}".format(fun,self.today))
             return True
 
     def load_history(self):
         if self.verbose: fun="load_history"
-        if self.verbose: print("\n[ShodanQuery][{}] -- ".format(fun))
+        if self.verbose: print("\n[{}][{}] -- ".format(self.classname,fun))
         try:
             with open('history.json', 'r') as openfile:
                 if self.verbose: print("\t[{}] Loaded history file from disk".format(fun))
@@ -59,7 +60,7 @@ class ShodanQuery:
 
     def load_sent_ips(self):
         if self.verbose: fun="load_sent_ips"
-        if self.verbose: print("\n[ShodanQuery][{}] -- ".format(fun))
+        if self.verbose: print("\n[{}][{}] -- ".format(self.classname,fun))
         try:
             with open("sentips.txt", "r") as sentIPfile:
                 if self.verbose: print("\t[{}] Loading sent IP's file from disk".format(fun))
@@ -69,8 +70,8 @@ class ShodanQuery:
             return set()
 
     def save_history(self):
-        if self.verbose: fun="save_history"        
-        if self.verbose: print("\n[ShodanQuery][{}] -- ".format(fun))
+        if self.verbose: fun="save_history"
+        if self.verbose: print("\n[{}][{}] -- ".format(self.classname,fun))
         try:
             with open("history.json", "w") as historyFile:
                 if self.verbose: print("\t[{}] Saving history data to disk".format(fun))
@@ -80,8 +81,8 @@ class ShodanQuery:
             pass
 
     def save_sent_ip(self, ip_address):
-        if self.verbose: fun="save_sent_ip"        
-        if self.verbose: print("\n[ShodanQuery][{}] -- ".format(fun))
+        if self.verbose: fun="save_sent_ip"
+        if self.verbose: print("\n[{}][{}] -- ".format(self.classname,fun))
         try:
             with open("sentips.txt", "a") as sentIPfile:
                if self.verbose: print("\t[{}] Saving Sent IP Address list to disk".format(fun))
@@ -92,8 +93,8 @@ class ShodanQuery:
            pass
 
     def search_history(self):
-        if self.verbose: fun="search_history"        
-        if self.verbose: print("\n[ShodanQuery][{}] -- ".format(fun))
+        if self.verbose: fun="search_history"
+        if self.verbose: print("\n[{}][{}] -- ".format(self.classname,fun))
         try:
             if nested_lookup("host", self.history):
                 if self.verbose: print("\t[{}] This host was already recorded".format(fun))
@@ -103,8 +104,8 @@ class ShodanQuery:
            return False
 
     def execute_with_retry(self, func, *args, **kwargs):
-        if self.verbose: fun="execute_with_retry"        
-        if self.verbose: print("\n[ShodanQuery][] -- ".format(fun))
+        if self.verbose: fun="execute_with_retry"
+        if self.verbose: print("\n[{}][{}] -- ".format(self.classname,fun))
         retries = 0
         while True:
             try:
@@ -119,8 +120,8 @@ class ShodanQuery:
                 time.sleep(60 * retries, 3600)
 
     def init_query(self):
-        if self.verbose: fun="init_query"        
-        if self.verbose: print("\n[ShodanQuery][{}] -- ".format(fun))
+        if self.verbose: fun="init_query"
+        if self.verbose: print("\n[{}][{}] -- ".format(self.classname,fun))
         if self.verbose: print("\t[{}] Current date is: {}".format(fun,self.today))
         if not self.check_date():
             if self.verbose: print("\t[{}] Current date was not found in the history file".format(fun))
@@ -134,7 +135,7 @@ class ShodanQuery:
 
     def parse_content(self, response_data):
         if self.verbose: fun="parse_content"
-        if self.verbose: print("\n[ShodanQuery][{}] -- ".format(fun))
+        if self.verbose: print("\n[{}][{}] -- ".format(self.classname,fun))
         if response_data:
             if self.verbose: print("\t[{}] Response data being processed".format(fun))
             for host in response_data:
@@ -181,7 +182,7 @@ class ShodanQuery:
 
     def random_host(self):
         if self.verbose: fun="parse_content"
-        if self.verbose: print("\n[ShodanQuery][{}] -- ".format(fun))
+        if self.verbose: print("\n[{}][{}] -- ".format(self.classname,fun))
         history_len = len(self.history)
         if self.verbose: print("\t[{}] Length of known host is: {}".format(fun,history_len))
         choice = random.randint(0,history_len)
