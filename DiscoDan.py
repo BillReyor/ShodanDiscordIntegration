@@ -38,71 +38,77 @@ class ShodanQuery:
         if self.verbose: print("\t[INIT] Current Date: {}".format(self.today))
 
     def check_date(self):
-        if self.verbose: print("\n[ShodanQuery][check_date] -- ")
+        if self.verbose: fun="check_date"
+        if self.verbose: print("\n[ShodanQuery][{}] -- ".format(fun))
         if self.today in nested_lookup('date', self.history):
-            if self.verbose: print("\t[check_date] Latest daily run being used: {}".format(self.today))
+            if self.verbose: print("\t[{}] Latest daily run being used: {}".format(fun,self.today))
             return True
 
     def load_history(self):
-        if self.verbose: print("\n[ShodanQuery][load_history] -- ")
+        if self.verbose: fun="load_history"
+        if self.verbose: print("\n[ShodanQuery][{}] -- ".format(fun))
         try:
             with open('history.json', 'r') as openfile:
-                if self.verbose: print("\t[load_history] Loaded history file from disk")
+                if self.verbose: print("\t[{}] Loaded history file from disk".format(fun))
                 return json.load(openfile)
         except FileNotFoundError:
-            if self.verbose: print("\t[load_history] History file being created on disk: './history.json'")
+            if self.verbose: print("\t[{}] History file being created on disk: './history.json'".format(fun))
             self.history = json.load([])
             self.save_history()
             self.load_history()
 
     def load_sent_ips(self):
-        if self.verbose: print("\n[ShodanQuery][load_sent_ips] -- ")
+        if self.verbose: fun="load_sent_ips"
+        if self.verbose: print("\n[ShodanQuery][{}] -- ".format(fun))
         try:
             with open("sentips.txt", "r") as sentIPfile:
-                if self.verbose: print("\t[load_sent_ips] Loading sent IP's file from disk")
+                if self.verbose: print("\t[{}] Loading sent IP's file from disk".format(fun))
                 return set(line.strip() for line in sentIPfile.readlines())
         except FileNotFoundError:
-            if self.verbose: print("\t[load_sent_ips] Load Sent IP List from disk failed at reading")
+            if self.verbose: print("\t[{}] Load Sent IP List from disk failed at reading".format(fun))
             return set()
 
     def save_history(self):
-        if self.verbose: print("\n[ShodanQuery][save_history] -- ")
+        if self.verbose: fun="save_history"        
+        if self.verbose: print("\n[ShodanQuery][{}] -- ".format(fun))
         try:
             with open("history.json", "w") as historyFile:
-                if self.verbose: print("\t[save_history] Saving history data to disk")
+                if self.verbose: print("\t[{}] Saving history data to disk".format(fun))
                 json.dump(self.history, historyFile)
         except Exception as e:
-            if self.verbose: print("\t[save_history] Failed to write history.json file.\nPlease check permissions of filesystem or user")
+            if self.verbose: print("\t[{}] Failed to write history.json file.\nPlease check permissions".format(fun))
             pass
 
     def save_sent_ip(self, ip_address):
-        if self.verbose: print("\n[ShodanQuery][save_sent_ip] -- ")
+        if self.verbose: fun="save_sent_ip"        
+        if self.verbose: print("\n[ShodanQuery][{}] -- ".format(fun))
         try:
             with open("sentips.txt", "a") as sentIPfile:
-               if self.verbose: print("\t[save_sent_ip] Saving Sent IP Address list to disk")
+               if self.verbose: print("\t[{}] Saving Sent IP Address list to disk".format(fun))
                sentIPfile.write(ip_address + "\n")
             self.sent_ips.add(ip_address)
         except Exception as e:
-           if self.verbose: print("\t[save_sent_ip] Failed to save Discord Messages log for {}").format(ip_address)
+           if self.verbose: print("\t[{}] Failed to save Discord Messages log for {}").format(fun,ip_address)
            pass
 
     def search_history(self):
-        if self.verbose: print("\n[ShodanQuery][search_history] -- ")
+        if self.verbose: fun="search_history"        
+        if self.verbose: print("\n[ShodanQuery][{}] -- ".format(fun))
         try:
             if nested_lookup("host", self.history):
-                if self.verbose: print("\t[search_history] This host was already recorded")
+                if self.verbose: print("\t[{}] This host was already recorded".format(fun))
                 pass
         except Exception as e:
-           if self.verbose: print("\t[search_history] Failed to process nested list dictionaries\n:Recommended: 'pip3 install nested-lookups'")
+           if self.verbose: print("\t[{}] Failed lookup host info\n:Recommended: 'pip3 install nested-lookups'".format(fun))
            return False
 
     def execute_with_retry(self, func, *args, **kwargs):
-        if self.verbose: print("\n[ShodanQuery][execute_with_retry] -- ")
-        if self.verbose: print("\t[init_query] Current date was not found in the history file")
+        if self.verbose: fun="execute_with_retry"        
+        if self.verbose: print("\n[ShodanQuery][] -- ".format(fun))
         retries = 0
         while True:
             try:
-                if self.verbose: print("\t[execute_with_retry] Current execution retry count: {}".format(retries))
+                if self.verbose: print("\t[{}] Current execution retry count: {}".format(fun,retries))
                 return func(*args, **kwargs)
             except Exception as e:
                 logger.error(f"Exception occurred: {e}")
@@ -113,67 +119,90 @@ class ShodanQuery:
                 time.sleep(60 * retries, 3600)
 
     def init_query(self):
-        if self.verbose: print("\n[ShodanQuery][init_query] -- ")
-        if self.verbose: print("\t[init_query] Current date is: {}".format(self.today))
+        if self.verbose: fun="init_query"        
+        if self.verbose: print("\n[ShodanQuery][{}] -- ".format(fun))
+        if self.verbose: print("\t[{}] Current date is: {}".format(fun,self.today))
         if not self.check_date():
-            if self.verbose: print("\t[init_query] Current date was not found in the history file")
-            if self.verbose: print("\t[init_query] Searching for hosts with keyword '{}'...".format(self.query))
+            if self.verbose: print("\t[{}] Current date was not found in the history file".format(fun))
+            if self.verbose: print("\t[{}] Searching for hosts with keyword '{}'...".format(fun,self.query))
             response_data = self.execute_with_retry(self.api.search_cursor, self.query)
             self.parse_content(response_data)
         else:
-            if self.verbose: print("\t[init_query] Current date found within the history file, using previous content")
-            if self.verbose: print("\t[init_query] Sending request to [random_host]")
+            if self.verbose: print("\t[{}] Using current DB from previous daily search".format(fun))
+            if self.verbose: print("\t[{}] Sending request to [random_host]".format(fun))
             self.random_host()
 
     def parse_content(self, response_data):
-        if self.verbose: print("\n[ShodanQuery][parse_content] -- ")
+        if self.verbose: fun="parse_content"
+        if self.verbose: print("\n[ShodanQuery][{}] -- ".format(fun))
         if response_data:
-            if self.verbose: print("\t[parse_content] Response data being processed")
+            if self.verbose: print("\t[{}] Response data being processed".format(fun))
             for host in response_data:
                 ip_address = host["ip_str"]
-                if self.verbose: print("\t[parse_content] Processing host: {}".format(ip_address))
+                if self.verbose: print("\t[{}] Processing host: {}".format(fun,ip_address))
                 if ip_address not in nested_lookup('host', self.history):
                     current_time = time.strftime("%Y-%m-%d", time.gmtime())
-                    if self.verbose: print("\t[parse_content] Host '{}' was not found in the history file".format(ip_address))
+                    if self.verbose: print("\t[{}] Host '{}' was not found in the history file".format(fun,ip_address))
                     port = host["port"]
                     country_name = host.get("location", {}).get("country_name", "Unknown country")
                     city_name = host.get("location", {}).get("city", "Unknown city")
                     image_url = "https://www.shodan.io/host/{}/image".format(ip_address)
-                    self.history.append({'host':ip_address, 'port':port, 'city': city_name, 'country':country_name, 'url':image_url, 'date': current_time})
-                    if self.verbose: print("\t[parse_content] Building history entry {}:{} in {}, {}: {}".format(ip_address, port, city_name, country_name, image_url))
+                    self.history.append({
+                        'host':ip_address,
+                        'port':port,
+                        'city': city_name,
+                        'country':country_name,
+                        'url':image_url,
+                        'date': current_time
+                    })
+                    if self.verbose: print("\t[{}] Building history entry {}:{} in {}, {}: {}".format(
+                        fun,
+                        ip_address,
+                        port,
+                        city_name,
+                        country_name,
+                        image_url
+                    ))
                 else:
-                    if self.verbose: print("\t[parse_content] Host {} already been processed: skipping".format(ip_address))
+                    if self.verbose: print("\t[{}] Host {} already been processed: skipping".format(fun,ip_address))
                     continue
         else:
-            if self.verbose: print("\t[parse_content] Unable to parse request, restarting from [init_query]")
+            if self.verbose: print("\t[{}] Unable to parse request, restarting from [init_query]".format(fun))
             self.init_query()
-        if self.verbose: print("\t[parse_content] Saving history file to disk")
+        if self.verbose: print("\t[{}] Saving history file to disk".format(fun))
         self.save_history()
-        if self.verbose: print("\t[parse_content] Loading recently saved history file to to memory")
+        if self.verbose: print("\t[{}] Loading recently saved history file to to memory".format(fun))
         self.history = self.load_history()
-        if self.verbose: print("\t[parse_content] Selecting random host from known targets")
+        if self.verbose: print("\t[{}] Selecting random host from known targets".format(fun))
         self.random_host()
 
-    def host_information(self, hostIPAddress):
+    def host_information(self, hostIPAddress): # planned for future use
         return self.api.host(hostIPAddress)
 
     def random_host(self):
-        if self.verbose: print("\n[ShodanQuery][random_host] -- ")
+        if self.verbose: fun="parse_content"
+        if self.verbose: print("\n[ShodanQuery][{}] -- ".format(fun))
         history_len = len(self.history)
-        if self.verbose: print("\t[random_host] Length of known host is: {}".format(history_len))
+        if self.verbose: print("\t[{}] Length of known host is: {}".format(fun,history_len))
         choice = random.randint(0,history_len)
-        if self.verbose: print("\t[random_host] Random number selcted is: {}".format(choice))
-        random_pick = self.history[choice]
-        if self.verbose: print("\t[random_host] Random host from list selected: {}".format(random_pick['host']))
-        if random_pick['host'] not in self.sent_ips:
-            if self.verbose: print("\t[random_host] Host has not been seen at discord before, generating new msg")
-            message = "Here's a Shodan image of {}:{} in {}, {}: {}".format(random_pick['host'],random_pick['port'],random_pick['city'],random_pick['country'],random_pick['url'])
-            if self.verbose: print("\t[random_host] MSG being sent onto [DiscordWebhookSender]")
-            self.save_sent_ip(random_pick['host'])
+        if self.verbose: print("\t[{}] Random number selcted is: {}".format(fun,choice))
+        ranpick = self.history[choice]
+        if self.verbose: print("\t[{}] Random host from list selected: {}".format(fun,ranpick['host']))
+        if ranpick['host'] not in self.sent_ips:
+            if self.verbose: print("\t[{}] Host has not been seen at discord before, generating new msg".format(fun))
+            message = "Here's a Shodan image of {}:{} in {}, {}: {}".format(
+                ranpick['host'],
+                ranpick['port'],
+                ranpick['city'],
+                ranpick['country'],
+                ranpick['url']
+            )
+            if self.verbose: print("\t[{}] MSG being sent onto [DiscordWebhookSender]".format(fun))
+            self.save_sent_ip(ranpick['host'])
             self.sent_ips = self.load_sent_ips()
-            DiscordWebhookSender.send_message(message, self.verbose)
+            DiscordWebhookSender.send_message()
         else:
-            if self.verbose: print("\t[random_host] Host choice attempting again due to previous sent msg 'duplication'.")
+            if self.verbose: print("\t[{}] Repeat host selection cause: 'duplication'".format(fun))
             self.random_host()
 
 class DiscordWebhookSender:
@@ -181,7 +210,14 @@ class DiscordWebhookSender:
     def send_message(message, verbose):
         if verbose: print("\n[DiscordWebhookSender] --\n\t[send_message] Sending message to Discord channle:")
         if verbose: print("\t\t[raw_data]: {}".format(message))
-        response = shodan_query.execute_with_retry(requests.post, DISCORD_WEBHOOK_URL, json={"content": message}, timeout=1000)
+        response = shodan_query.execute_with_retry(
+            requests.post,
+            DISCORD_WEBHOOK_URL,
+            json={
+                "content": message
+            },
+            timeout=1000
+        )
         if response.status_code == 204:
             if verbose: print("\t[send_message] Message sent successfully.")
             current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
