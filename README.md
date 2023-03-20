@@ -20,7 +20,7 @@ Installation
 Configuration
 -------------
 
-1.  Open the `DiscoDan.py' file in a text editor.
+1.  Open the `DiscoDan.py` file in a text editor.
 2.  Replace `YOUR_SHODAN_API_KEY` with your Shodan API key.
 3.  Replace `YOUR_DISCORD_WEBHOOK_URL` with your Discord webhook URL.
 4.  Modify the `QUERY` parameter to customize your search query.
