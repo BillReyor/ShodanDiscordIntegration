@@ -200,7 +200,7 @@ class ShodanQuery:
             if self.verbose: print("\t[{}] MSG being sent onto [DiscordWebhookSender]".format(fun))
             self.save_sent_ip(ranpick['host'])
             self.sent_ips = self.load_sent_ips()
-            DiscordWebhookSender.send_message()
+            DiscordWebhookSender.send_message(message, self.verbose)
         else:
             if self.verbose: print("\t[{}] Repeat host selection cause: 'duplication'".format(fun))
             self.random_host()
@@ -229,7 +229,7 @@ class DiscordWebhookSender:
             if verbose: print("\t[send_message] Message was UNSUCCESSFUL, waiting 60 seconds, attempting again")
             time.sleep(60)
             if verbose: print("\t[send_message] Attempting to resend message to Discord")
-            DiscordWebhookSender.send_message(message)
+            DiscordWebhookSender.send_message(message, verbose)
 
 if __name__ == "__main__":
     shodan_query = ShodanQuery(SHODAN_API_KEY, QUERY, VERBOSE)
