@@ -1,10 +1,14 @@
 from nested_lookup import nested_lookup
+from diagnostics import exception_hook
+from diagnostics.logging import FileHandler
+import hashlib
 import shodan
 import random
 import time
 import requests
 import logging
 import json
+
 
 # Shodan API key
 SHODAN_API_KEY = ""
@@ -88,12 +92,26 @@ class ShodanQuery:
             if self.verbose: print("\t[{}] Failed to write history.json file.\nPlease check permissions".format(fun))
             pass
 
-    def save_sent_ip(self, ip_address):
+    def save_sentips(self):
         if self.verbose: fun="save_sent_ip"
         try:
-            with open("sentips.txt", "a") as sentIPfile:
+            with open("sentips.txt", "w") as sentIPfile:
                if self.verbose: print("\t[{}] Saving Sent IP Address list to disk".format(fun))
-               sentIPfile.write(ip_address + "\n")
+               for ipaddress in self.sent_ips:
+                   sentIPfile.write(ip_address + "\n")
+        except Exception as e:
+           if self.verbose: print("\t[{}] Failed to save Sent IP list for {}").format(fun,ip_address)
+           pass
+
+    def cleanexit(self):
+        if self.verbose: fun="cleanexit"
+        if self.verbose: print("\t[{}] PEBKAC ERROR: Saving history files to disk".format(fun))
+        self.save_history()
+        self.save_sentips()
+
+    def register_ip(self, ip_address):
+        if self.verbose: fun="register_ip"
+        try:
             self.sent_ips.add(ip_address)
         except Exception as e:
            if self.verbose: print("\t[{}] Failed to save Discord Messages log for {}").format(fun,ip_address)
@@ -201,7 +219,7 @@ class ShodanQuery:
                 ranpick['url']
             )
             if self.verbose: print("\t[{}] MSG being sent onto [DiscordWebhookSender]".format(fun))
-            self.save_sent_ip(ranpick['host'])
+            self.register_ip(ranpick['host'])
             self.sent_ips = self.load_sent_ips()
             DiscordWebhookSender.send_message(message, self.verbose)
         else:
@@ -211,7 +229,8 @@ class ShodanQuery:
 class DiscordWebhookSender:
     @staticmethod
     def send_message(message, verbose):
-        if verbose: print("\n[DiscordWebhookSender] --\n\t[send_message] Sending message to Discord channle:")
+        if self.verbose: fun="send_message"
+        if verbose: print("\n[DiscordWebhookSender] --\n\t[{}] Sending message to Discord channle:".format(fun))
         if verbose: print("\t\t[raw_data]: {}".format(message))
         response = shodan_query.execute_with_retry(
             requests.post,
@@ -222,19 +241,29 @@ class DiscordWebhookSender:
             timeout=1000
         )
         if response.status_code == 204:
-            if verbose: print("\t[send_message] Message sent successfully.")
+            if verbose: print("\t[{}] Message sent successfully.".format(fun))
             current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
-            if verbose: print("\t[send_message] Timestamp: {}".format(current_time))
-            if verbose: print("\t[send_message] Sleeping for '60' seconds")
+            if verbose: print("\t[{}] Timestamp: {}".format(fun, current_time))
+            if verbose: print("\t[{}] Sleeping for '60' seconds".format(fun))
             time.sleep(60)
             shodan_query.init_query()
         else:
-            if verbose: print("\t[send_message] Message was UNSUCCESSFUL, waiting 60 seconds, attempting again")
+            if verbose: print("\t[{}] Message was UNSUCCESSFUL, waiting 60 seconds, attempting again".format(fun))
             time.sleep(60)
-            if verbose: print("\t[send_message] Attempting to resend message to Discord")
+            if verbose: print("\t[{}] Attempting to resend message to Discord".format(fun))
             DiscordWebhookSender.send_message(message, verbose)
 
 if __name__ == "__main__":
-    shodan_query = ShodanQuery(SHODAN_API_KEY, QUERY, VERBOSE)
-    while True:
-        shodan_query.init_query()
+    file_path = "./DiscoDan_Traceback.log"
+    log_handler = FileHandler(file_path)
+    exception_hook.enable_for_logger("Main_Logger", handler=log_handler)
+    try:
+        shodan_query = ShodanQuery(SHODAN_API_KEY, QUERY, VERBOSE)
+        while True:
+            shodan_query.init_query()
+    except KeyboardInterrupt:
+        shodan_query.cleanexit()
+    except:
+        logger = logging.getLogger("Main_Logger")
+        logger.error("Error occured", exc_info=True)
+        logging.exception("ShodanQuery({},{},{}) faulted: {}".format(SHODAN_API_KEY, QUERY, VERBOSE, main_fault))
