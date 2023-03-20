@@ -30,6 +30,8 @@ class ShodanQuery:
         self.query = query
         self.sent_ips = self.load_sent_ips()
         self.history = self.load_history()
+        if hashlib.md5(self.query.encode('utf-8')).hexdigest() not in self.history.keys():
+            self.history[hashlib.md5(self.query.encode('utf-8')).hexdigest()] = {'query': self.query}
         self.today = current_time = time.strftime("%Y-%m-%d", time.gmtime())
         if self.verbose: print("\t[INIT] Shodan API Key: {}".format(api_key))
         if self.verbose: print("\t[INIT] Shodan query: {}".format(query))
@@ -37,6 +39,12 @@ class ShodanQuery:
         if self.verbose: print("\t[INIT] Request History file: {}".format("./history.json"))
         if self.verbose: print("\t[INIT] Current Date: {}".format(self.today))
 
+    def live_edit_query(self, new_query):
+        if self.verbose: fun="live_edit_query"
+        current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
+        if self.verbose: print("\t[{}] Query modified to: {} on: {}".format(fun,current_time))
+        self.query = new_query
+        self.init_query()
 
     def check_date(self):
         if self.verbose: fun="check_date"
@@ -52,7 +60,11 @@ class ShodanQuery:
                 return json.load(openfile)
         except FileNotFoundError:
             if self.verbose: print("\t[{}] History file being created on disk: './history.json'".format(fun))
-            self.history = json.load([])
+            self.history = dict()
+            query_hash = hashlib.md5(self.query.encode('utf-8')).hexdigest()
+            if query_hash not in self.history.keys():
+                self.history[query_hash] = []
+                self.history[query_hash].append({'query': self.query})
             self.save_history()
             self.load_history()
 
@@ -90,7 +102,7 @@ class ShodanQuery:
     def search_history(self):
         if self.verbose: fun="search_history"
         try:
-            if nested_lookup("host", self.history):
+            if nested_lookup("host", self.history[hashlib.md5(self.query.encode('utf-8')).hexdigest()]):
                 if self.verbose: print("\t[{}] This host was already recorded".format(fun))
                 pass
         except Exception as e:
@@ -115,6 +127,8 @@ class ShodanQuery:
     def init_query(self):
         if self.verbose: print("\n[ShodanQuery:] -- ")
         if self.verbose: fun="init_query"
+        if hashlib.md5(self.query.encode('utf-8')).hexdigest() not in self.history:
+            self.history[hashlib.md5(self.query.encode('utf-8')).hexdigest()] = {'query': self.query}
         if self.verbose: print("\t[{}] Current date is: {}".format(fun,self.today))
         if not self.check_date():
             if self.verbose: print("\t[{}] Current date was not found in the history file".format(fun))
@@ -133,14 +147,18 @@ class ShodanQuery:
             for host in response_data:
                 ip_address = host["ip_str"]
                 if self.verbose: print("\t[{}] Processing host: {}".format(fun,ip_address))
-                if ip_address not in nested_lookup('host', self.history):
+                if ip_address not in nested_lookup('host', self.history[hashlib.md5(self.query.encode('utf-8')).hexdigest()]):
                     current_time = time.strftime("%Y-%m-%d", time.gmtime())
                     if self.verbose: print("\t[{}] Host '{}' was not found in the history file".format(fun,ip_address))
                     port = host["port"]
                     country_name = host.get("location", {}).get("country_name", "Unknown country")
                     city_name = host.get("location", {}).get("city", "Unknown city")
                     image_url = "https://www.shodan.io/host/{}/image".format(ip_address)
-                    self.history.append({
+                    query_hash = hashlib.md5(self.query.encode('utf-8')).hexdigest()
+                    if query_hash not in self.history.keys():
+                        self.history[query_hash] = []
+                        self.history[query_hash].append({'query': self.query})
+                    self.history[query_hash].append({
                         'host':ip_address,
                         'port':port,
                         'city': city_name,
@@ -174,11 +192,11 @@ class ShodanQuery:
 
     def random_host(self):
         if self.verbose: fun="parse_content"
-        history_len = len(self.history)
+        history_len = len(self.history[hashlib.md5(self.query.encode('utf-8')).hexdigest()])
         if self.verbose: print("\t[{}] Length of known host is: {}".format(fun,history_len))
         choice = random.randint(0,history_len)
         if self.verbose: print("\t[{}] Random number selcted is: {}".format(fun,choice))
-        ranpick = self.history.pop(choice)
+        ranpick = self.history[hashlib.md5(self.query.encode('utf-8')).hexdigest()].pop(choice)
         if self.verbose: print("\t[{}] Random host from list selected: {}".format(fun,ranpick['host']))
         if ranpick['host'] not in self.sent_ips:
             if self.verbose: print("\t[{}] Host has not been seen at discord before, generating new msg".format(fun))
@@ -227,3 +245,4 @@ if __name__ == "__main__":
     shodan_query = ShodanQuery(SHODAN_API_KEY, QUERY, VERBOSE)
     while True:
         shodan_query.init_query()
+                                    
