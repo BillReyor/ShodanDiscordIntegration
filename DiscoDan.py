@@ -230,7 +230,7 @@ class ShodanQuery:
 class DiscordWebhookSender:
     @staticmethod
     def send_message(message, verbose):
-        if self.verbose: fun="send_message"
+        if verbose: fun="send_message"
         if verbose: print("\n[DiscordWebhookSender] --\n\t[{}] Sending message to Discord channle:".format(fun))
         if verbose: print("\t\t[raw_data]: {}".format(message))
         response = shodan_query.execute_with_retry(
@@ -267,4 +267,4 @@ if __name__ == "__main__":
     except:
         logger = logging.getLogger("Main_Logger")
         logger.error("Error occured", exc_info=True)
-        logging.exception("ShodanQuery({},{},{}) faulted: {}".format(SHODAN_API_KEY, QUERY, VERBOSE, main_fault))
+        logging.exception("ShodanQuery({},{},{}) faulted".format(SHODAN_API_KEY, QUERY, VERBOSE))
