@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 class ShodanQuery:
     def __init__(self, api_key, query, verbose):
         self.verbose = verbose
-        self.today = current_time = time.strftime("%Y-%m-%d", time.gmtime())
+        self.today = time.strftime("%Y-%m-%d", time.gmtime())
         if self.verbose: print("\n[Initialization] -- ")
         self.api = shodan.Shodan(api_key)
         self.query = query
@@ -36,19 +36,21 @@ class ShodanQuery:
         if self.verbose: print("\t[INIT] Shodan query: {}".format(query))
         if self.verbose: print("\t[INIT] Application verbosity: {}".format(True))
         if self.verbose: print("\t[INIT] Request History file: {}".format("./history.json"))
-        if self.verbose: print("\t[INIT] Current Date: {}".format(self.today))
+        if self.verbose: print("\t[INIT] Current Day: {}".format(self.today))
 
     def live_edit_query(self, new_query):
         if self.verbose: fun="live_edit_query"
-        current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
-        if self.verbose: print("\t[{}] Query modified to: {} on: {}".format(fun,current_time))
+        detailed_time = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
+        if self.verbose: print("\t[{}] Query modified to: {} on: {}".format(fun,detailed_time))
         self.query = new_query
         self.init_query()
 
     def check_date(self):
         if self.verbose: fun="check_date"
-        if self.today in nested_lookup('date', self.history):
+        if self.today not in nested_lookup('date', self.history[self.queryhash]):
             if self.verbose: print("\t[{}] Latest daily run being used: {}".format(fun,self.today))
+            return False
+        else:
             return True
 
     def load_history(self):
@@ -97,7 +99,7 @@ class ShodanQuery:
            if self.verbose: print("\t[{}] Failed to save Discord Messages log for {}").format(fun,ip_address)
            pass
 
-    def search_history(self):
+    def search_history(self): # future use
         if self.verbose: fun="search_history"
         try:
             if nested_lookup("host", self.history[self.queryhash]):
@@ -132,7 +134,7 @@ class ShodanQuery:
             response_data = self.execute_with_retry(self.api.search_cursor, self.query)
             self.parse_content(response_data)
         else:
-            if self.verbose: print("\t[{}] Using current DB from previous daily search".format(fun))
+            if self.verbose: print("\t[{}] Using current DB from {} search".format(fun, self.today))
             if self.verbose: print("\t[{}] Sending request to [random_host]".format(fun))
             self.random_host()
 
