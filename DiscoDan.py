@@ -159,13 +159,13 @@ class ShodanQuery:
                 else:
                     if self.verbose: print("\t[{}] Host {} already been processed: skipping".format(fun,ip_address))
                     continue
+            if self.verbose: print("\t[{}] Saving history file to disk".format(fun))
+            self.save_history()
+            if self.verbose: print("\t[{}] Loading recently saved history file to to memory".format(fun))
+            self.history = self.load_history()
         else:
             if self.verbose: print("\t[{}] Unable to parse request, restarting from [init_query]".format(fun))
             self.init_query()
-        if self.verbose: print("\t[{}] Saving history file to disk".format(fun))
-        self.save_history()
-        if self.verbose: print("\t[{}] Loading recently saved history file to to memory".format(fun))
-        self.history = self.load_history()
         if self.verbose: print("\t[{}] Selecting random host from known targets".format(fun))
         self.random_host()
 
@@ -178,7 +178,6 @@ class ShodanQuery:
         if self.verbose: print("\t[{}] Length of known host is: {}".format(fun,history_len))
         choice = random.randint(0,history_len)
         if self.verbose: print("\t[{}] Random number selcted is: {}".format(fun,choice))
-        #ranpick = self.history[choice]
         ranpick = self.history.pop(choice)
         if self.verbose: print("\t[{}] Random host from list selected: {}".format(fun,ranpick['host']))
         if ranpick['host'] not in self.sent_ips:
@@ -228,4 +227,3 @@ if __name__ == "__main__":
     shodan_query = ShodanQuery(SHODAN_API_KEY, QUERY, VERBOSE)
     while True:
         shodan_query.init_query()
-
