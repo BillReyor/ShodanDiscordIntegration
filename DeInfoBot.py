@@ -39,10 +39,8 @@ async def on_message(message):
         print(f'{message.author} used {message.content}')
     await bot.process_commands(message)
 
-# Executes when the command mc is used and we trigger specific functions
-# when specific arguments are caught in our if statements
 @bot.command()
-async def dd(ctx, arg):
+async def db(ctx, arg):
     if arg == 'help':
         await ctx.send(bot_help_message)
 
@@ -53,32 +51,16 @@ async def dd(ctx, arg):
         await ctx.send(f'Server load is at {load_percentage}%')
 
     if arg == 'search_query':
-        response = requests.get(f'https://api.mcsrvstat.us/2/{minecraft_server_url}').json()
-        server_status = response['online']
-        if server_status == True:
-            server_status = 'online'
-        await ctx.send(f'Server is {server_status}')
+        await ctx.send(f'Current search query is {QUERY}')
 
     if arg == 'total_count':
-        response = requests.get('https://api.mcsrvstat.us/2/{minecraft_server_url}').json()
-        players_status = response['players']
-        if players_status['online'] == 0:
-            players_online_message = 'No one is online'
-        if players_status['online'] == 1:
-            players_online_username = players_status['list'][0]
-            players_online_message = f'1 player is online: {players_online_username}'
-        if players_status['online'] > 1:
-            po = players_status['online']
-            players_online_usernames = players_status['list']
-            joined_usernames = ", ".join(players_online_usernames)
-            players_online_message = f'{po} players are online: {joined_usernames}'
-        await ctx.send(f'{players_online_message}')
+        await ctx.send(f'Total count of results in current query {TOTAL_COUNT}')
 
     if arg == 'set_query':
-        cpu_count = multiprocessing.cpu_count()
+        await ctx.send(f'New search query is {QUERY}')
 
     if arg == 'dump':
-        cpu_count = multiprocessing.cpu_count()
+        await ctx.send(f'Dumping total results: {TOTAL_COUNT} from {QUERY} db')
 
 
 bot.run(DISCORD_TOKEN)
