@@ -9,7 +9,6 @@ import requests
 import logging
 import json
 
-
 # Shodan API key
 SHODAN_API_KEY = ""
 
@@ -187,7 +186,9 @@ class ShodanQuery:
                 else:
                     if self.verbose: print("\t[{}] Host {} already been processed: skipping".format(fun,ip_address))
                     continue
-            self.history[self.queryhash].append({'date': self.today})
+            if self.today not in nested_lookup('date', self.history[self.queryhash]):
+                if self.verbose: print("\t[{}] Appending date entry to: {} query".format(fun,self.query))
+                self.history[self.queryhash].append({'date': self.today})
             if self.verbose: print("\t[{}] Saving history file to disk".format(fun))
             self.save_history()
             if self.verbose: print("\t[{}] Loading recently saved history file to to memory".format(fun))
