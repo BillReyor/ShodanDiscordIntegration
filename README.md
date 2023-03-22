@@ -14,9 +14,10 @@ Installation
 ------------
 
 1.  Clone this repository or download the `DiscoDan.py` file.
-2.  Install the `requests` module by running `pip3 install requests`.
-3.  Install the `nested-lookup` module by running `pip3 install nested-lookup`.
-4.  Install the `diagnostics` module by running `pip3 install diagnostics`.
+2.  Install the `shodan` module by running `pip3 install shodan`.
+3.  Install the `requests` module by running `pip3 install requests`.
+4.  Install the `nested-lookup` module by running `pip3 install nested-lookup`.
+5.  Install the `diagnostics` module by running `pip3 install diagnostics`.
   
 Configuration
 -------------
