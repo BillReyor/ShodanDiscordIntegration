@@ -1,66 +1,65 @@
 import discord
+import shodan
+import json
 from discord.ext import commands
-import requests
-import os
-from dotenv import load_dotenv
-import random
-import multiprocessing
 
-BOT_NAME = "BOTNAMEHERE"
-DISCORD_TOKEN = "YOURTOKENHERE
-load_dotenv()
+class ShodanSearchBot(discord.Client):
+    def __init__(self, shodan_api_key):
+        intents = discord.Intents.default()
+        super().__init__(command_prefix='!', intents=intents)
+        self.api = shodan.Shodan(shodan_api_key)
+        self.history = []
 
-bot_help_message = """
-:: Bot Usage ::
-`!db help`           : shows help
-`!db whosonline`     : shows who is online within the channel
-`!db serverusage`    : shows statistics of the bot host
-`!db search_query`   : shows system load in percentage
-`!db total_count`    : shows the total count of results
-`!db set_query`      : sets the search query for the application
-`!db dump`           : returns all results on a query for a specific date
-"""
+    async def on_ready(self):
+        print(f"Logged in as {self.user.name}")
 
-available_commands = ['help', 'whosonline', 'serverusage', 'search_query', 'total_count', 'set_query', 'dump']
-bot = commands.Bot(command_prefix="!",intents=discord.Intents.default())
+    async def on_message(self, message):
+        if message.author == self.user:
+            return
 
-@bot.event
-async def on_ready():
-    print(f'{bot.user} succesfully logged in!')
+        if message.content.startswith("!search"):
+            query = message.content[7:].strip()
 
-@bot.event
-async def on_message(message):
-    print(f'User: {message.author}, Message: {message.content}')
-    if message.author == bot.user:
-        return
-    if message.content == '!db':
-        await message.channel.send(bot_help_message)
-    if 'whosonline' in message.content:
-        print(f'{message.author} used {message.content}')
-    await bot.process_commands(message)
+            try:
+                results = self.api.search(query)
 
-@bot.command()
-async def db(ctx, arg):
-    if arg == 'help':
-        await ctx.send(bot_help_message)
+                # Save results to history
+                self.history.append(results["matches"])
 
-    if arg == 'serverusage':
-        cpu_count = multiprocessing.cpu_count()
-        one, five, fifteen = os.getloadavg()
-        load_percentage = int(five / cpu_count * 100)
-        await ctx.send(f'Server load is at {load_percentage}%')
+                # Send response to Discord channel
+                response = f"Showing {len(results['matches'])} results for '{query}':\n\n"
+                for match in results["matches"]:
+                    response += f"{match['ip_str']}:{match['port']}\n"
 
-    if arg == 'search_query':
-        await ctx.send(f'Current search query is {QUERY}')
+                await message.channel.send(response)
 
-    if arg == 'total_count':
-        await ctx.send(f'Total count of results in current query {TOTAL_COUNT}')
+            except shodan.APIError as e:
+                await message.channel.send(f"Error: {e}")
 
-    if arg == 'set_query':
-        await ctx.send(f'New search query is {QUERY}')
+        elif message.content.startswith("!history"):
+            try:
+                num_results = int(message.content[9:].strip())
+            except ValueError:
+                await message.channel.send("Invalid number specified")
 
-    if arg == 'dump':
-        await ctx.send(f'Dumping total results: {TOTAL_COUNT} from {QUERY} db')
+            # Ensure num_results is within the bounds of the history list
+            num_results = min(num_results, len(self.history))
 
+            # Construct response
+            response = f"Showing last {num_results} search results:\n\n"
+            for matches in self.history[-num_results:]:
+                for match in matches:
+                    response += f"{match['ip_str']}:{match['port']}\n"
+                response += "\n"
 
+            await message.channel.send(response)
+
+            
+# Insert your Shodan API key here
+SHODAN_API_KEY = "YOUR_SHODAN_API_KEY"
+
+# Insert your discord token here
+DISCORD_TOKEN = "YOUR_DISCORD_TOKEN_HERE"
+
+bot = ShodanSearchBot(SHODAN_API_KEY)
 bot.run(DISCORD_TOKEN)
