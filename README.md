@@ -36,5 +36,5 @@ Usage
 3.  The bot will send a random msg containing a link to the Discord webhook (adjust the timing) per hour
 4.  The msgs will contain: host's IP address, city, and country and a link to the Shodan hosted image(s).
 5.  App will ensure that no duplicate request are sent to the channle
-6.  App will proceed to exhaust the contents gathered from the quesy until finished
+6.  App will proceed to exhaust the contents gathered from the query until finished
 7.  Next steps ?
